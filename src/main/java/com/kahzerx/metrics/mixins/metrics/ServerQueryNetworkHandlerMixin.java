@@ -1,7 +1,7 @@
-package com.kahzerx.metrics;
+package com.kahzerx.metrics.mixins.metrics;
 
-import com.kahzerx.kahzerxmod.metrics.IsStatPacketInterface;
-import com.kahzerx.kahzerxmod.metrics.SetServerInterface;
+import com.kahzerx.metrics.helpers.IsStatPacketInterface;
+import com.kahzerx.metrics.helpers.SetServerInterface;
 import net.minecraft.network.packet.s2c.query.QueryResponseS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerMetadata;

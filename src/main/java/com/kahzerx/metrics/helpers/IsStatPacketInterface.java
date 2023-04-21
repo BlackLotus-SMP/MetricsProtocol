@@ -1,4 +1,4 @@
-package com.kahzerx.metrics;
+package com.kahzerx.metrics.helpers;
 
 public interface IsStatPacketInterface {
     boolean isMetrics();

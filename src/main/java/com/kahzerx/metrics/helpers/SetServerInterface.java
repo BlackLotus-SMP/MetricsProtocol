@@ -1,4 +1,4 @@
-package com.kahzerx.metrics;
+package com.kahzerx.metrics.helpers;
 
 import net.minecraft.server.MinecraftServer;
 

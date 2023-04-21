@@ -1,6 +1,6 @@
-package com.kahzerx.metrics;
+package com.kahzerx.metrics.mixins.metrics;
 
-import com.kahzerx.kahzerxmod.metrics.IsStatPacketInterface;
+import com.kahzerx.metrics.helpers.IsStatPacketInterface;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;

@@ -1,6 +1,6 @@
-package com.kahzerx.metrics;
+package com.kahzerx.metrics.helpers;
 
-import com.kahzerx.kahzerxmod.profiler.TPSProfiler;
+import com.kahzerx.metrics.profiler.TPSProfiler;
 
 public interface ServerCollectorInterface {
     TPSProfiler getTPSProfiler();

@@ -1,7 +1,7 @@
 package com.kahzerx.metrics.mixins.server;
 
-import com.kahzerx.kahzerxmod.metrics.ServerCollectorInterface;
-import com.kahzerx.kahzerxmod.profiler.TPSProfiler;
+import com.kahzerx.metrics.helpers.ServerCollectorInterface;
+import com.kahzerx.metrics.profiler.TPSProfiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;

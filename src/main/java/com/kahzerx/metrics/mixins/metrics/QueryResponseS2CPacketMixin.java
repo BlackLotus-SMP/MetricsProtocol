@@ -1,12 +1,12 @@
-package com.kahzerx.metrics;
+package com.kahzerx.metrics.mixins.metrics;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.kahzerx.kahzerxmod.metrics.IsStatPacketInterface;
-import com.kahzerx.kahzerxmod.metrics.Metrics;
-import com.kahzerx.kahzerxmod.metrics.ServerCollectorInterface;
-import com.kahzerx.kahzerxmod.metrics.SetServerInterface;
-import com.kahzerx.kahzerxmod.profiler.TPSProfiler;
+import com.kahzerx.metrics.helpers.IsStatPacketInterface;
+import com.kahzerx.metrics.helpers.Metrics;
+import com.kahzerx.metrics.helpers.ServerCollectorInterface;
+import com.kahzerx.metrics.helpers.SetServerInterface;
+import com.kahzerx.metrics.profiler.TPSProfiler;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.query.QueryResponseS2CPacket;
 import net.minecraft.server.MinecraftServer;

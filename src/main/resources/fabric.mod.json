@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "metrics",
+  "version": "${version}",
+
+  "name": "Metrics Protocol",
+  "description": "Adds support to export metrics using the minecraft network protocol",
+  "authors": [
+    "Kahzerx"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/metrics/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [ ]
+  },
+  "mixins": [
+    "metrics.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.14.17",
+    "minecraft": "~1.19.3",
+    "java": ">=17"
+  },
+  "suggests": {
+  }
+}
