@@ -22,7 +22,7 @@ import java.util.List;
 
 @Mixin(QueryResponseS2CPacket.class)
 public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetServerInterface {
-    private static final Gson MetricsParse = new GsonBuilder().
+    private final Gson metricsParse = new GsonBuilder().
             registerTypeAdapter(Metrics.class, new Metrics.Codec()).
             registerTypeAdapter(Metrics.TPS.class, new Metrics.TPS.Codec()).
             registerTypeAdapter(Metrics.Players.class, new Metrics.Players.Codec()).
@@ -57,7 +57,7 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
                     (double) mem.getHeapMemoryUsage().getMax() / (1024 * 1024 * 1024)
             );
             Metrics m = new Metrics(tps, mspt, players, version, ram);
-            return instance.writeString(MetricsParse.toJson(m), Short.MAX_VALUE);  // TODO probably make this Integer
+            return instance.writeString(metricsParse.toJson(m), Short.MAX_VALUE);  // TODO probably make this Integer
         } else {
             return instance.writeString(string);
         }
