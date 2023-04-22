@@ -77,11 +77,11 @@ public class Metrics {
 
     public static class TPS {
         private final double tps5Sec;
-        private final double tps10Sec;
+        private final double tps30Sec;
         private final double tps1Min;
-        public TPS(double tps5Sec, double tps10Sec, double tps1Min) {
+        public TPS(double tps5Sec, double tps30Sec, double tps1Min) {
             this.tps5Sec = tps5Sec;
-            this.tps10Sec = tps10Sec;
+            this.tps30Sec = tps30Sec;
             this.tps1Min = tps1Min;
         }
 
@@ -90,7 +90,7 @@ public class Metrics {
             public JsonElement serialize(TPS tps, Type type, JsonSerializationContext jsonSerializationContext) {
                 JsonObject jsonObject = new JsonObject();
                 jsonObject.addProperty("5s", tps.tps5Sec);
-                jsonObject.addProperty("10s", tps.tps10Sec);
+                jsonObject.addProperty("30s", tps.tps30Sec);
                 jsonObject.addProperty("1m", tps.tps1Min);
                 return jsonObject;
             }

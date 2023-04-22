@@ -35,7 +35,7 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
     private PacketByteBuf onWrite(PacketByteBuf instance, String string) {
         if (this.isMetrics()) {
             TPSProfiler tpsProf = ((ServerCollectorInterface) server).getTPSProfiler();
-            Metrics.TPS tps = new Metrics.TPS(tpsProf.tps5Sec(), tpsProf.tps10Sec(), tpsProf.tps1Min());
+            Metrics.TPS tps = new Metrics.TPS(tpsProf.tps5Sec(), tpsProf.tps30Sec(), tpsProf.tps1Min());
             Metrics.MSPT mspt = new Metrics.MSPT(((ServerCollectorInterface) server).getMSPT());
             List<ServerPlayerEntity> connectedPlayers = server.getPlayerManager().getPlayerList();
             List<Metrics.Player> playerMetricList = new ArrayList<>();
