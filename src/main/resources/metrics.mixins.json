@@ -8,7 +8,8 @@
     "metrics.QueryResponseS2CPacketMixin",
     "metrics.ServerHandshakeNetworkHandlerMixin",
     "metrics.ServerQueryNetworkHandlerMixin",
-    "server.MinecraftServerMixin"
+    "server.MinecraftServerMixin",
+    "server.WorldMixin"
   ],
   "client": [
   ],

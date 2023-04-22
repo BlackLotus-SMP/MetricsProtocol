@@ -6,6 +6,7 @@ import com.kahzerx.metrics.helpers.IsStatPacketInterface;
 import com.kahzerx.metrics.helpers.Metrics;
 import com.kahzerx.metrics.helpers.ServerCollectorInterface;
 import com.kahzerx.metrics.helpers.SetServerInterface;
+import com.kahzerx.metrics.profiler.EntityProfiler;
 import com.kahzerx.metrics.profiler.TPSProfiler;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.query.QueryResponseS2CPacket;
@@ -27,6 +28,7 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
             registerTypeAdapter(Metrics.TPS.class, new Metrics.TPS.Codec()).
             registerTypeAdapter(Metrics.Players.class, new Metrics.Players.Codec()).
             registerTypeAdapter(Metrics.RAM.class, new Metrics.RAM.Codec()).
+            registerTypeAdapter(Metrics.Entities.class, new Metrics.Entities.Codec()).
             create();
     private boolean isMetrics = false;
     private MinecraftServer server;
@@ -35,7 +37,9 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
     private PacketByteBuf onWrite(PacketByteBuf instance, String string) {
         if (this.isMetrics()) {
             TPSProfiler tpsProf = ((ServerCollectorInterface) server).getTPSProfiler();
+            EntityProfiler entityProf = ((ServerCollectorInterface) server).getEntityProfiler();
             Metrics.TPS tps = new Metrics.TPS(tpsProf.tps5Sec(), tpsProf.tps30Sec(), tpsProf.tps1Min());
+            Metrics.Entities entities = new Metrics.Entities(entityProf.getTickingEntities());
             Metrics.MSPT mspt = new Metrics.MSPT(((ServerCollectorInterface) server).getMSPT());
             List<ServerPlayerEntity> connectedPlayers = server.getPlayerManager().getPlayerList();
             List<Metrics.Player> playerMetricList = new ArrayList<>();
@@ -56,7 +60,7 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
                     (double) mem.getHeapMemoryUsage().getUsed() / (1024 * 1024 * 1024),
                     (double) mem.getHeapMemoryUsage().getMax() / (1024 * 1024 * 1024)
             );
-            Metrics m = new Metrics(tps, mspt, players, version, ram);
+            Metrics m = new Metrics(tps, mspt, players, version, ram, entities);
             return instance.writeString(metricsParse.toJson(m), Short.MAX_VALUE);  // TODO probably make this Integer
         } else {
             return instance.writeString(string);

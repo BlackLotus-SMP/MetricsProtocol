@@ -4,56 +4,25 @@ import com.google.gson.*;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 
-public class Metrics {
-    private final TPS tps;
-    private final MSPT mspt;
-    private final Players players;
-    private final Version version;
-    private final RAM ram;
-
-    public Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram) {
-        this.tps = tps;
-        this.mspt = mspt;
-        this.players = players;
-        this.version = version;
-        this.ram = ram;
-    }
-
-    public Players getPlayers() {
-        return players;
-    }
-
-    public TPS getTps() {
-        return tps;
-    }
-
-    public MSPT getMspt() {
-        return mspt;
-    }
-
-    public Version getVersion() {
-        return version;
-    }
-
-    public RAM getRam() {
-        return ram;
-    }
-
+public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities) {
     public static class Codec implements JsonSerializer<Metrics> {
         @Override
         public JsonElement serialize(Metrics metrics, Type type, JsonSerializationContext jsonSerializationContext) {
             JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("version", metrics.getVersion().version());
-            jsonObject.addProperty("mspt", metrics.getMspt().mspt());
-            jsonObject.add("tps", jsonSerializationContext.serialize(metrics.getTps()));
-            jsonObject.add("players", jsonSerializationContext.serialize(metrics.getPlayers()));
-            jsonObject.add("ram", jsonSerializationContext.serialize(metrics.getRam()));
+            jsonObject.addProperty("version", metrics.version().version());
+            jsonObject.addProperty("mspt", metrics.mspt().mspt());
+            jsonObject.add("tps", jsonSerializationContext.serialize(metrics.tps()));
+            jsonObject.add("players", jsonSerializationContext.serialize(metrics.players()));
+            jsonObject.add("ram", jsonSerializationContext.serialize(metrics.ram()));
+            jsonObject.add("entities", jsonSerializationContext.serialize(metrics.entities()));
             return jsonObject;
         }
     }
 
-    public record Player(String playerName, String uuid, String dim, double posX, double posY, double posZ) {}
+    public record Player(String playerName, String uuid, String dim, double posX, double posY, double posZ) {
+    }
 
     public record Players(List<Player> playerList) {
         public static class Codec implements JsonSerializer<Players> {
@@ -75,31 +44,47 @@ public class Metrics {
         }
     }
 
-    public static class TPS {
-        private final double tps5Sec;
-        private final double tps30Sec;
-        private final double tps1Min;
-        public TPS(double tps5Sec, double tps30Sec, double tps1Min) {
-            this.tps5Sec = tps5Sec;
-            this.tps30Sec = tps30Sec;
-            this.tps1Min = tps1Min;
-        }
-
+    public record TPS(double tps5Sec, double tps30Sec, double tps1Min) {
         public static class Codec implements JsonSerializer<TPS> {
             @Override
             public JsonElement serialize(TPS tps, Type type, JsonSerializationContext jsonSerializationContext) {
                 JsonObject jsonObject = new JsonObject();
-                jsonObject.addProperty("5s", tps.tps5Sec);
-                jsonObject.addProperty("30s", tps.tps30Sec);
-                jsonObject.addProperty("1m", tps.tps1Min);
+                jsonObject.addProperty("5s", tps.tps5Sec());
+                jsonObject.addProperty("30s", tps.tps30Sec());
+                jsonObject.addProperty("1m", tps.tps1Min());
                 return jsonObject;
             }
         }
     }
 
-    public record MSPT(double mspt) {}
+    public record Entities(Map<String, Map<String, Integer>> entityProf) {
+        public static class Codec implements JsonSerializer<Entities> {
+            @Override
+            public JsonElement serialize(Entities entities, Type type, JsonSerializationContext jsonSerializationContext) {
+                JsonArray dimArray = new JsonArray();
+                for (Map.Entry<String, Map<String, Integer>> dim : entities.entityProf().entrySet()) {
+                    JsonObject dimObj = new JsonObject();
+                    JsonArray entityArray = new JsonArray();
+                    for (Map.Entry<String, Integer> entity : dim.getValue().entrySet()) {
+                        JsonObject entityObject = new JsonObject();
+                        entityObject.addProperty("name", entity.getKey());
+                        entityObject.addProperty("amount", entity.getValue());
+                        entityArray.add(entityObject);
+                    }
+                    dimObj.addProperty("dim", dim.getKey());
+                    dimObj.add("entities", entityArray);
+                    dimArray.add(dimObj);
+                }
+                return dimArray;
+            }
+        }
+    }
 
-    public record Version(String version) {}
+    public record MSPT(double mspt) {
+    }
+
+    public record Version(String version) {
+    }
 
     public record RAM(double used, double max) {
         public static class Codec implements JsonSerializer<RAM> {
