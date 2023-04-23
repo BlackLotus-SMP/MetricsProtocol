@@ -5,8 +5,9 @@ import com.google.gson.*;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities) {
+public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities, BlockEntities blockEntities) {
     public static class Codec implements JsonSerializer<Metrics> {
         @Override
         public JsonElement serialize(Metrics metrics, Type type, JsonSerializationContext jsonSerializationContext) {
@@ -17,6 +18,7 @@ public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM 
             jsonObject.add("players", jsonSerializationContext.serialize(metrics.players()));
             jsonObject.add("ram", jsonSerializationContext.serialize(metrics.ram()));
             jsonObject.add("entities", jsonSerializationContext.serialize(metrics.entities()));
+            jsonObject.add("block_entities", jsonSerializationContext.serialize(metrics.blockEntities()));
             return jsonObject;
         }
     }
@@ -64,20 +66,40 @@ public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM 
                 JsonArray dimArray = new JsonArray();
                 for (Map.Entry<String, Map<String, Integer>> dim : entities.entityProf().entrySet()) {
                     JsonObject dimObj = new JsonObject();
-                    JsonArray entityArray = new JsonArray();
-                    for (Map.Entry<String, Integer> entity : dim.getValue().entrySet()) {
-                        JsonObject entityObject = new JsonObject();
-                        entityObject.addProperty("name", entity.getKey());
-                        entityObject.addProperty("amount", entity.getValue());
-                        entityArray.add(entityObject);
-                    }
                     dimObj.addProperty("dim", dim.getKey());
-                    dimObj.add("entities", entityArray);
+                    dimObj.add("entities", extractFromDim(dim.getValue().entrySet()));
                     dimArray.add(dimObj);
                 }
                 return dimArray;
             }
         }
+    }
+
+    public record BlockEntities(Map<String, Map<String, Integer>> blockEntityProf) {
+        public static class Codec implements JsonSerializer<BlockEntities> {
+            @Override
+            public JsonElement serialize(BlockEntities blockEntities, Type type, JsonSerializationContext jsonSerializationContext) {
+                JsonArray dimArray = new JsonArray();
+                for (Map.Entry<String, Map<String, Integer>> dim : blockEntities.blockEntityProf().entrySet()) {
+                    JsonObject dimObj = new JsonObject();
+                    dimObj.addProperty("dim", dim.getKey());
+                    dimObj.add("block_entities", extractFromDim(dim.getValue().entrySet()));
+                    dimArray.add(dimObj);
+                }
+                return dimArray;
+            }
+        }
+    }
+
+    private static JsonArray extractFromDim(Set<Map.Entry<String, Integer>> entries) {
+        JsonArray array = new JsonArray();
+        for (Map.Entry<String, Integer> data : entries) {
+            JsonObject blockEntityObject = new JsonObject();
+            blockEntityObject.addProperty("name", data.getKey());
+            blockEntityObject.addProperty("amount", data.getValue());
+            array.add(blockEntityObject);
+        }
+        return array;
     }
 
     public record MSPT(double mspt) {
