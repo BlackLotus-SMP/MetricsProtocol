@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities, BlockEntities blockEntities) {
+public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities, BlockEntities blockEntities, Chunks chunks) {
     public static class Codec implements JsonSerializer<Metrics> {
         @Override
         public JsonElement serialize(Metrics metrics, Type type, JsonSerializationContext jsonSerializationContext) {
@@ -19,6 +19,7 @@ public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM 
             jsonObject.add("ram", jsonSerializationContext.serialize(metrics.ram()));
             jsonObject.add("entities", jsonSerializationContext.serialize(metrics.entities()));
             jsonObject.add("block_entities", jsonSerializationContext.serialize(metrics.blockEntities()));
+            jsonObject.add("chunks", jsonSerializationContext.serialize(metrics.chunks()));
             return jsonObject;
         }
     }
@@ -91,12 +92,28 @@ public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM 
         }
     }
 
+    public record Chunks(Map<String, Integer> chunksProf) {
+        public static class Codec implements JsonSerializer<Chunks> {
+            @Override
+            public JsonElement serialize(Chunks chunks, Type type, JsonSerializationContext jsonSerializationContext) {
+                JsonArray dimArray = new JsonArray();
+                for (Map.Entry<String, Integer> dim : chunks.chunksProf().entrySet()) {
+                    JsonObject dimObj = new JsonObject();
+                    dimObj.addProperty("dim", dim.getKey());
+                    dimObj.addProperty("count", dim.getValue());
+                    dimArray.add(dimObj);
+                }
+                return dimArray;
+            }
+        }
+    }
+
     private static JsonArray extractFromDim(Set<Map.Entry<String, Integer>> entries) {
         JsonArray array = new JsonArray();
         for (Map.Entry<String, Integer> data : entries) {
             JsonObject blockEntityObject = new JsonObject();
             blockEntityObject.addProperty("name", data.getKey());
-            blockEntityObject.addProperty("amount", data.getValue());
+            blockEntityObject.addProperty("count", data.getValue());
             array.add(blockEntityObject);
         }
         return array;

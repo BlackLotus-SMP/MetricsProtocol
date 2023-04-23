@@ -7,6 +7,7 @@ import com.kahzerx.metrics.helpers.Metrics;
 import com.kahzerx.metrics.helpers.ServerCollectorInterface;
 import com.kahzerx.metrics.helpers.SetServerInterface;
 import com.kahzerx.metrics.profiler.BlockEntityProfiler;
+import com.kahzerx.metrics.profiler.ChunkProfiler;
 import com.kahzerx.metrics.profiler.EntityProfiler;
 import com.kahzerx.metrics.profiler.TPSProfiler;
 import net.minecraft.network.PacketByteBuf;
@@ -31,6 +32,7 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
             registerTypeAdapter(Metrics.RAM.class, new Metrics.RAM.Codec()).
             registerTypeAdapter(Metrics.Entities.class, new Metrics.Entities.Codec()).
             registerTypeAdapter(Metrics.BlockEntities.class, new Metrics.BlockEntities.Codec()).
+            registerTypeAdapter(Metrics.Chunks.class, new Metrics.Chunks.Codec()).
             create();
     private boolean isMetrics = false;
     private MinecraftServer server;
@@ -41,9 +43,12 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
             TPSProfiler tpsProf = ((ServerCollectorInterface) server).getTPSProfiler();
             EntityProfiler entityProf = ((ServerCollectorInterface) server).getEntityProfiler();
             BlockEntityProfiler blockEntityProf = ((ServerCollectorInterface) server).getBlockEntityProfiler();
+            ChunkProfiler chunkProf = ((ServerCollectorInterface) server).getChunkProfiler();
+
             Metrics.TPS tps = new Metrics.TPS(tpsProf.tps5Sec(), tpsProf.tps30Sec(), tpsProf.tps1Min());
             Metrics.Entities entities = new Metrics.Entities(entityProf.getTickingEntities());
             Metrics.BlockEntities blockEntities = new Metrics.BlockEntities(blockEntityProf.getTickingBlockEntities());
+            Metrics.Chunks chunks = new Metrics.Chunks(chunkProf.getLoadedChunks());
             Metrics.MSPT mspt = new Metrics.MSPT(((ServerCollectorInterface) server).getMSPT());
             List<ServerPlayerEntity> connectedPlayers = server.getPlayerManager().getPlayerList();
             List<Metrics.Player> playerMetricList = new ArrayList<>();
@@ -64,7 +69,7 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
                     (double) mem.getHeapMemoryUsage().getUsed() / (1024 * 1024 * 1024),
                     (double) mem.getHeapMemoryUsage().getMax() / (1024 * 1024 * 1024)
             );
-            Metrics m = new Metrics(tps, mspt, players, version, ram, entities, blockEntities);
+            Metrics m = new Metrics(tps, mspt, players, version, ram, entities, blockEntities, chunks);
             return instance.writeString(metricsParse.toJson(m), Short.MAX_VALUE);  // TODO probably make this Integer
         } else {
             return instance.writeString(string);

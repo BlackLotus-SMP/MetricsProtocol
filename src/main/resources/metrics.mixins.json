@@ -9,6 +9,7 @@
     "metrics.ServerHandshakeNetworkHandlerMixin",
     "metrics.ServerQueryNetworkHandlerMixin",
     "server.MinecraftServerMixin",
+    "server.ServerWorldMixin",
     "server.WorldMixin"
   ],
   "client": [

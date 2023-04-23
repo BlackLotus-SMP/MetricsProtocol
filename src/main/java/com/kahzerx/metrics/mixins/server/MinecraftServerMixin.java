@@ -2,6 +2,7 @@ package com.kahzerx.metrics.mixins.server;
 
 import com.kahzerx.metrics.helpers.ServerCollectorInterface;
 import com.kahzerx.metrics.profiler.BlockEntityProfiler;
+import com.kahzerx.metrics.profiler.ChunkProfiler;
 import com.kahzerx.metrics.profiler.EntityProfiler;
 import com.kahzerx.metrics.profiler.TPSProfiler;
 import net.minecraft.server.MinecraftServer;
@@ -20,6 +21,7 @@ public class MinecraftServerMixin implements ServerCollectorInterface {
     TPSProfiler tpsProfiler = new TPSProfiler();
     EntityProfiler entityProfiler = new EntityProfiler();
     BlockEntityProfiler blockEntityProfiler = new BlockEntityProfiler();
+    ChunkProfiler chunkProfiler = new ChunkProfiler();
     private double mspt;
     @Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiling/jfr/FlightProfiler;onTick(F)V"))
     private void onTick(CallbackInfo ci) {
@@ -27,6 +29,7 @@ public class MinecraftServerMixin implements ServerCollectorInterface {
         this.tpsProfiler.onTick(ticks);
         this.entityProfiler.onTick();
         this.blockEntityProfiler.onTick();
+        this.chunkProfiler.onTick();
         mspt = MathHelper.average(lastTickLengths) * 1.06E-6D;
     }
 
@@ -41,6 +44,10 @@ public class MinecraftServerMixin implements ServerCollectorInterface {
 
     public BlockEntityProfiler getBlockEntityProfiler() {
         return this.blockEntityProfiler;
+    }
+
+    public ChunkProfiler getChunkProfiler() {
+        return chunkProfiler;
     }
 
     @Override
