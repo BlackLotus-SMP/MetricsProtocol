@@ -3,11 +3,12 @@ package com.kahzerx.metrics.helpers;
 import com.google.gson.*;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities, BlockEntities blockEntities, Chunks chunks) {
+public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities, BlockEntities blockEntities, Chunks chunks, Dimensions dimensions) {
     public static class Codec implements JsonSerializer<Metrics> {
         @Override
         public JsonElement serialize(Metrics metrics, Type type, JsonSerializationContext jsonSerializationContext) {
@@ -20,6 +21,7 @@ public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM 
             jsonObject.add("entities", jsonSerializationContext.serialize(metrics.entities()));
             jsonObject.add("block_entities", jsonSerializationContext.serialize(metrics.blockEntities()));
             jsonObject.add("chunks", jsonSerializationContext.serialize(metrics.chunks()));
+            jsonObject.add("dimensions", jsonSerializationContext.serialize(metrics.dimensions()));
             return jsonObject;
         }
     }
@@ -133,6 +135,19 @@ public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM 
                 jsonObject.addProperty("used", ram.used());
                 jsonObject.addProperty("max", ram.max());
                 return jsonObject;
+            }
+        }
+    }
+
+    public record Dimensions(ArrayList<String> dimList) {
+        public static class Codec implements JsonSerializer<Dimensions> {
+            @Override
+            public JsonElement serialize(Dimensions dimensions, Type type, JsonSerializationContext jsonSerializationContext) {
+                JsonArray array = new JsonArray();
+                for (String dimName : dimensions.dimList()) {
+                    array.add(dimName);
+                }
+                return array;
             }
         }
     }

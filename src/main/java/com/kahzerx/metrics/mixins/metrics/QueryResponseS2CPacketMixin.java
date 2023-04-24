@@ -14,6 +14,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.query.QueryResponseS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -33,6 +34,7 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
             registerTypeAdapter(Metrics.Entities.class, new Metrics.Entities.Codec()).
             registerTypeAdapter(Metrics.BlockEntities.class, new Metrics.BlockEntities.Codec()).
             registerTypeAdapter(Metrics.Chunks.class, new Metrics.Chunks.Codec()).
+            registerTypeAdapter(Metrics.Dimensions.class, new Metrics.Dimensions.Codec()).
             create();
     private boolean isMetrics = false;
     private MinecraftServer server;
@@ -63,13 +65,18 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
                 ));
             }
             Metrics.Players players = new Metrics.Players(playerMetricList);
+            ArrayList<String> allDims = new ArrayList<>();
+            for (ServerWorld world : this.server.getWorlds()) {
+                allDims.add(world.getRegistryKey().getValue().getPath());
+            }
             Metrics.Version version = new Metrics.Version(server.getVersion());
             MemoryMXBean mem = ManagementFactory.getMemoryMXBean();
             Metrics.RAM ram = new Metrics.RAM(
                     (double) mem.getHeapMemoryUsage().getUsed() / (1024 * 1024 * 1024),
                     (double) mem.getHeapMemoryUsage().getMax() / (1024 * 1024 * 1024)
             );
-            Metrics m = new Metrics(tps, mspt, players, version, ram, entities, blockEntities, chunks);
+            Metrics.Dimensions dimensions = new Metrics.Dimensions(allDims);
+            Metrics m = new Metrics(tps, mspt, players, version, ram, entities, blockEntities, chunks, dimensions);
             return instance.writeString(metricsParse.toJson(m), Short.MAX_VALUE);  // TODO probably make this Integer
         } else {
             return instance.writeString(string);
