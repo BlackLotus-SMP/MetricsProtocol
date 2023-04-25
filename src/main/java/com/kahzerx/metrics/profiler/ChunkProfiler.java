@@ -7,7 +7,7 @@ public class ChunkProfiler {
     Map<String, Integer> cachedChunks = new HashMap<>();
     Map<String, Integer> finalChunks = new HashMap<>();
 
-    public void onEntityTick(String dimension) {
+    public void onChunkTick(String dimension) {
         this.cachedChunks.compute(dimension, (k, v) -> (v == null) ? 0 : v + 1);
     }
 
