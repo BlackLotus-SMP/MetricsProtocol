@@ -10,13 +10,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = ServerChunkManager.class, priority = 10)
+@Mixin(ServerChunkManager.class)
 public abstract class ServerWorldMixin {
     @Shadow public abstract World getWorld();
 
     @Inject(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;tickChunk(Lnet/minecraft/world/chunk/WorldChunk;I)V"))
     private void onTickChunk(CallbackInfo ci) {
-        System.out.println("tick");
         MinecraftServer server = getWorld().getServer();
         if (server == null) {
             return;
