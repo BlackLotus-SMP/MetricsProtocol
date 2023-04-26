@@ -38,8 +38,8 @@ def w_varint(n: int) -> bytes:
 
 
 def main():
-    ip: socket = "carlosnoob.com"
-    port: int = 25588
+    ip: socket = "127.0.0.1"
+    port: int = 25565
 
     sock: socket.socket = socket.socket()
     sock.connect((ip, port))
