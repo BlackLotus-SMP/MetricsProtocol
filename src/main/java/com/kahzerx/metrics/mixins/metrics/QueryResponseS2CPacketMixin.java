@@ -70,6 +70,7 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
                 allDims.add(world.getRegistryKey().getValue().getPath());
             }
             Metrics.Uptime uptime = new Metrics.Uptime(((ServerCollectorInterface) server).getStartTime().toString());
+            Metrics.Day day = new Metrics.Day(server.getOverworld().getTimeOfDay() / 24000);
             Metrics.Version version = new Metrics.Version(server.getVersion());
             MemoryMXBean mem = ManagementFactory.getMemoryMXBean();
             Metrics.RAM ram = new Metrics.RAM(
@@ -77,7 +78,7 @@ public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetSe
                     (double) mem.getHeapMemoryUsage().getMax() / (1024 * 1024 * 1024)
             );
             Metrics.Dimensions dimensions = new Metrics.Dimensions(allDims);
-            Metrics m = new Metrics(tps, mspt, players, version, ram, entities, blockEntities, chunks, dimensions, uptime);
+            Metrics m = new Metrics(tps, mspt, players, version, ram, entities, blockEntities, chunks, dimensions, uptime, day);
             return instance.writeString(metricsParse.toJson(m), Short.MAX_VALUE);  // TODO probably make this Integer
         } else {
             return instance.writeString(string);

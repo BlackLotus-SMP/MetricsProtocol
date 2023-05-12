@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities, BlockEntities blockEntities, Chunks chunks, Dimensions dimensions, Uptime uptime) {
+public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities, BlockEntities blockEntities, Chunks chunks, Dimensions dimensions, Uptime uptime, Day day) {
     public static class Codec implements JsonSerializer<Metrics> {
         @Override
         public JsonElement serialize(Metrics metrics, Type type, JsonSerializationContext jsonSerializationContext) {
@@ -16,6 +16,7 @@ public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM 
             jsonObject.addProperty("version", metrics.version().version());
             jsonObject.addProperty("mspt", metrics.mspt().mspt());
             jsonObject.addProperty("time_started", metrics.uptime().startTime());
+            jsonObject.addProperty("day", metrics.day().day());
             jsonObject.add("tps", jsonSerializationContext.serialize(metrics.tps()));
             jsonObject.add("players", jsonSerializationContext.serialize(metrics.players()));
             jsonObject.add("ram", jsonSerializationContext.serialize(metrics.ram()));
@@ -27,8 +28,7 @@ public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM 
         }
     }
 
-    public record Player(String playerName, String uuid, String dim, double posX, double posY, double posZ) {
-    }
+    public record Player(String playerName, String uuid, String dim, double posX, double posY, double posZ) {}
 
     public record Players(List<Player> playerList) {
         public static class Codec implements JsonSerializer<Players> {
@@ -122,14 +122,13 @@ public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM 
         return array;
     }
 
-    public record MSPT(double mspt) {
-    }
+    public record MSPT(double mspt) {}
 
-    public record Version(String version) {
-    }
+    public record Version(String version) {}
 
-    public record Uptime(String startTime) {
-    }
+    public record Uptime(String startTime) {}
+
+    public record Day(Long day) {}
 
     public record RAM(double used, double max) {
         public static class Codec implements JsonSerializer<RAM> {
