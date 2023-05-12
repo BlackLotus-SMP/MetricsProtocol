@@ -2,7 +2,6 @@ package com.kahzerx.metrics.mixins.server;
 
 import com.kahzerx.metrics.helpers.ServerCollectorInterface;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
@@ -23,8 +22,6 @@ import java.util.function.Consumer;
 @Mixin(World.class)
 public abstract class WorldMixin {
     @Shadow @Nullable public abstract MinecraftServer getServer();
-
-    @Shadow @Nullable public abstract BlockEntity getBlockEntity(BlockPos pos);
 
     @Shadow public abstract BlockState getBlockState(BlockPos pos);
 
