@@ -8,13 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities, BlockEntities blockEntities, Chunks chunks, Dimensions dimensions) {
+public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities, BlockEntities blockEntities, Chunks chunks, Dimensions dimensions, Uptime uptime) {
     public static class Codec implements JsonSerializer<Metrics> {
         @Override
         public JsonElement serialize(Metrics metrics, Type type, JsonSerializationContext jsonSerializationContext) {
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("version", metrics.version().version());
             jsonObject.addProperty("mspt", metrics.mspt().mspt());
+            jsonObject.addProperty("time_started", metrics.uptime().startTime());
             jsonObject.add("tps", jsonSerializationContext.serialize(metrics.tps()));
             jsonObject.add("players", jsonSerializationContext.serialize(metrics.players()));
             jsonObject.add("ram", jsonSerializationContext.serialize(metrics.ram()));
@@ -125,6 +126,9 @@ public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM 
     }
 
     public record Version(String version) {
+    }
+
+    public record Uptime(String startTime) {
     }
 
     public record RAM(double used, double max) {

@@ -14,15 +14,19 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.time.ZonedDateTime;
+
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin implements ServerCollectorInterface {
     @Shadow private int ticks;
     @Shadow @Final public long[] lastTickLengths;
-    TPSProfiler tpsProfiler = new TPSProfiler();
-    EntityProfiler entityProfiler = new EntityProfiler();
-    BlockEntityProfiler blockEntityProfiler = new BlockEntityProfiler();
-    ChunkProfiler chunkProfiler = new ChunkProfiler();
+    private final TPSProfiler tpsProfiler = new TPSProfiler();
+    private final EntityProfiler entityProfiler = new EntityProfiler();
+    private final BlockEntityProfiler blockEntityProfiler = new BlockEntityProfiler();
+    private final ChunkProfiler chunkProfiler = new ChunkProfiler();
     private double mspt;
+    private final ZonedDateTime startTime = ZonedDateTime.now();
+
     @Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiling/jfr/FlightProfiler;onTick(F)V"))
     private void onTick(CallbackInfo ci) {
         int ticks = this.ticks;
@@ -53,5 +57,9 @@ public class MinecraftServerMixin implements ServerCollectorInterface {
     @Override
     public double getMSPT() {
         return this.mspt;
+    }
+
+    public ZonedDateTime getStartTime() {
+        return this.startTime;
     }
 }
