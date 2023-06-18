@@ -30,6 +30,6 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          automatic_release_tag: 1.19.3
+          automatic_release_tag: 1.20.0
           files: |
             build/libs/*.jar

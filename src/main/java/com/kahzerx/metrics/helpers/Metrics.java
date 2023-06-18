@@ -1,157 +1,76 @@
 package com.kahzerx.metrics.helpers;
 
-import com.google.gson.*;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-public record Metrics(TPS tps, MSPT mspt, Players players, Version version, RAM ram, Entities entities, BlockEntities blockEntities, Chunks chunks, Dimensions dimensions, Uptime uptime, Day day) {
-    public static class Codec implements JsonSerializer<Metrics> {
-        @Override
-        public JsonElement serialize(Metrics metrics, Type type, JsonSerializationContext jsonSerializationContext) {
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("version", metrics.version().version());
-            jsonObject.addProperty("mspt", metrics.mspt().mspt());
-            jsonObject.addProperty("time_started", metrics.uptime().startTime());
-            jsonObject.addProperty("day", metrics.day().day());
-            jsonObject.add("tps", jsonSerializationContext.serialize(metrics.tps()));
-            jsonObject.add("players", jsonSerializationContext.serialize(metrics.players()));
-            jsonObject.add("ram", jsonSerializationContext.serialize(metrics.ram()));
-            jsonObject.add("entities", jsonSerializationContext.serialize(metrics.entities()));
-            jsonObject.add("block_entities", jsonSerializationContext.serialize(metrics.blockEntities()));
-            jsonObject.add("chunks", jsonSerializationContext.serialize(metrics.chunks()));
-            jsonObject.add("dimensions", jsonSerializationContext.serialize(metrics.dimensions()));
-            return jsonObject;
-        }
+public record Metrics(RAM ram, String version, Long day, Double mspt, String timeStarted, List<String> dimList, List<Player> playerList, TPS tps, List<ChunksPerDim> chunks, List<EntitiesPerDim> entities, List<BlockEntitiesPerDim> blockEntities) {
+    public static final Codec<Metrics> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+            RAM.CODEC.fieldOf("ram").forGetter(Metrics::ram),
+            Codec.STRING.fieldOf("version").forGetter(Metrics::version),
+            Codec.LONG.fieldOf("day").forGetter(Metrics::day),
+            Codec.DOUBLE.fieldOf("mspt").forGetter(Metrics::mspt),
+            Codec.STRING.fieldOf("time_started").forGetter(Metrics::timeStarted),
+            Codec.STRING.listOf().fieldOf("dimensions").forGetter(Metrics::dimList),
+            Player.CODEC.listOf().fieldOf("players").forGetter(Metrics::playerList),
+            TPS.CODEC.fieldOf("tps").forGetter(Metrics::tps),
+            ChunksPerDim.CODEC.listOf().fieldOf("chunks").forGetter(Metrics::chunks),
+            EntitiesPerDim.CODEC.listOf().fieldOf("entities").forGetter(Metrics::entities),
+            BlockEntitiesPerDim.CODEC.listOf().fieldOf("block_entities").forGetter(Metrics::blockEntities)
+    ).apply(instance, Metrics::new));
+
+    public record RAM(double used, double max) {
+        public static final Codec<RAM> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+                Codec.DOUBLE.fieldOf("used").forGetter(RAM::used),
+                Codec.DOUBLE.fieldOf("max").forGetter(RAM::max)
+        ).apply(instance, RAM::new));
     }
 
-    public record Player(String playerName, String uuid, String dim, double posX, double posY, double posZ) {}
-
-    public record Players(List<Player> playerList) {
-        public static class Codec implements JsonSerializer<Players> {
-            @Override
-            public JsonElement serialize(Players players, Type type, JsonSerializationContext jsonSerializationContext) {
-                JsonArray jsonArray = new JsonArray();
-                for (Player p : players.playerList()) {
-                    JsonObject playerObject = new JsonObject();
-                    playerObject.addProperty("name", p.playerName());
-                    playerObject.addProperty("uuid", p.uuid());
-                    playerObject.addProperty("dim", p.dim());
-                    playerObject.addProperty("x", p.posX());
-                    playerObject.addProperty("y", p.posY());
-                    playerObject.addProperty("z", p.posZ());
-                    jsonArray.add(playerObject);
-                }
-                return jsonArray;
-            }
-        }
+    public record Player(String playerName, String uuid, String dim, double posX, double posY, double posZ) {
+        public static final Codec<Player> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+                Codec.STRING.fieldOf("name").forGetter(Player::playerName),
+                Codec.STRING.fieldOf("uuid").forGetter(Player::uuid),
+                Codec.STRING.fieldOf("dim").forGetter(Player::dim),
+                Codec.DOUBLE.fieldOf("x").forGetter(Player::posX),
+                Codec.DOUBLE.fieldOf("y").forGetter(Player::posY),
+                Codec.DOUBLE.fieldOf("z").forGetter(Player::posZ)
+        ).apply(instance, Player::new));
     }
 
     public record TPS(double tps5Sec, double tps30Sec, double tps1Min) {
-        public static class Codec implements JsonSerializer<TPS> {
-            @Override
-            public JsonElement serialize(TPS tps, Type type, JsonSerializationContext jsonSerializationContext) {
-                JsonObject jsonObject = new JsonObject();
-                jsonObject.addProperty("5s", tps.tps5Sec());
-                jsonObject.addProperty("30s", tps.tps30Sec());
-                jsonObject.addProperty("1m", tps.tps1Min());
-                return jsonObject;
-            }
-        }
+        public static final Codec<TPS> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+                Codec.DOUBLE.fieldOf("5s").forGetter(TPS::tps5Sec),
+                Codec.DOUBLE.fieldOf("30s").forGetter(TPS::tps30Sec),
+                Codec.DOUBLE.fieldOf("1m").forGetter(TPS::tps1Min)
+        ).apply(instance, TPS::new));
     }
 
-    public record Entities(Map<String, Map<String, Integer>> entityProf) {
-        public static class Codec implements JsonSerializer<Entities> {
-            @Override
-            public JsonElement serialize(Entities entities, Type type, JsonSerializationContext jsonSerializationContext) {
-                JsonArray dimArray = new JsonArray();
-                for (Map.Entry<String, Map<String, Integer>> dim : entities.entityProf().entrySet()) {
-                    JsonObject dimObj = new JsonObject();
-                    dimObj.addProperty("dim", dim.getKey());
-                    dimObj.add("entities", extractFromDim(dim.getValue().entrySet()));
-                    dimArray.add(dimObj);
-                }
-                return dimArray;
-            }
-        }
+    public record ChunksPerDim(String dimName, int count) {
+        public static final Codec<ChunksPerDim> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+                Codec.STRING.fieldOf("dim").forGetter(ChunksPerDim::dimName),
+                Codec.INT.fieldOf("count").forGetter(ChunksPerDim::count)
+        ).apply(instance, ChunksPerDim::new));
     }
 
-    public record BlockEntities(Map<String, Map<String, Integer>> blockEntityProf) {
-        public static class Codec implements JsonSerializer<BlockEntities> {
-            @Override
-            public JsonElement serialize(BlockEntities blockEntities, Type type, JsonSerializationContext jsonSerializationContext) {
-                JsonArray dimArray = new JsonArray();
-                for (Map.Entry<String, Map<String, Integer>> dim : blockEntities.blockEntityProf().entrySet()) {
-                    JsonObject dimObj = new JsonObject();
-                    dimObj.addProperty("dim", dim.getKey());
-                    dimObj.add("block_entities", extractFromDim(dim.getValue().entrySet()));
-                    dimArray.add(dimObj);
-                }
-                return dimArray;
-            }
-        }
+    public record EntitiesPerDim(String dimName, List<Count> entities) {
+        public static final Codec<EntitiesPerDim> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+                Codec.STRING.fieldOf("dim").forGetter(EntitiesPerDim::dimName),
+                Count.CODEC.listOf().fieldOf("entities").forGetter(EntitiesPerDim::entities)
+        ).apply(instance, EntitiesPerDim::new));
     }
 
-    public record Chunks(Map<String, Integer> chunksProf) {
-        public static class Codec implements JsonSerializer<Chunks> {
-            @Override
-            public JsonElement serialize(Chunks chunks, Type type, JsonSerializationContext jsonSerializationContext) {
-                JsonArray dimArray = new JsonArray();
-                for (Map.Entry<String, Integer> dim : chunks.chunksProf().entrySet()) {
-                    JsonObject dimObj = new JsonObject();
-                    dimObj.addProperty("dim", dim.getKey());
-                    dimObj.addProperty("count", dim.getValue());
-                    dimArray.add(dimObj);
-                }
-                return dimArray;
-            }
-        }
+    public record BlockEntitiesPerDim(String dimName, List<Count> blockEntities) {
+        public static final Codec<BlockEntitiesPerDim> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+                Codec.STRING.fieldOf("dim").forGetter(BlockEntitiesPerDim::dimName),
+                Count.CODEC.listOf().fieldOf("block_entities").forGetter(BlockEntitiesPerDim::blockEntities)
+        ).apply(instance, BlockEntitiesPerDim::new));
     }
 
-    private static JsonArray extractFromDim(Set<Map.Entry<String, Integer>> entries) {
-        JsonArray array = new JsonArray();
-        for (Map.Entry<String, Integer> data : entries) {
-            JsonObject blockEntityObject = new JsonObject();
-            blockEntityObject.addProperty("name", data.getKey());
-            blockEntityObject.addProperty("count", data.getValue());
-            array.add(blockEntityObject);
-        }
-        return array;
-    }
-
-    public record MSPT(double mspt) {}
-
-    public record Version(String version) {}
-
-    public record Uptime(String startTime) {}
-
-    public record Day(Long day) {}
-
-    public record RAM(double used, double max) {
-        public static class Codec implements JsonSerializer<RAM> {
-            @Override
-            public JsonElement serialize(RAM ram, Type type, JsonSerializationContext jsonSerializationContext) {
-                JsonObject jsonObject = new JsonObject();
-                jsonObject.addProperty("used", ram.used());
-                jsonObject.addProperty("max", ram.max());
-                return jsonObject;
-            }
-        }
-    }
-
-    public record Dimensions(ArrayList<String> dimList) {
-        public static class Codec implements JsonSerializer<Dimensions> {
-            @Override
-            public JsonElement serialize(Dimensions dimensions, Type type, JsonSerializationContext jsonSerializationContext) {
-                JsonArray array = new JsonArray();
-                for (String dimName : dimensions.dimList()) {
-                    array.add(dimName);
-                }
-                return array;
-            }
-        }
+    public record Count(String name, int count) {
+        public static final Codec<Count> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+                Codec.STRING.fieldOf("name").forGetter(Count::name),
+                Codec.INT.fieldOf("count").forGetter(Count::count)
+        ).apply(instance, Count::new));
     }
 }

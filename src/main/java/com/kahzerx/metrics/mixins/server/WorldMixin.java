@@ -21,11 +21,11 @@ import java.util.function.Consumer;
 
 @Mixin(World.class)
 public abstract class WorldMixin {
-    @Shadow @Nullable public abstract MinecraftServer getServer();
-
     @Shadow public abstract BlockState getBlockState(BlockPos pos);
 
     @Shadow public abstract WorldChunk getWorldChunk(BlockPos pos);
+
+    @Shadow @Nullable public abstract MinecraftServer getServer();
 
     @Inject(method = "tickEntity", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", shift = At.Shift.BEFORE))
     private <T extends Entity> void onTick(Consumer<T> tickConsumer, T entity, CallbackInfo ci) {

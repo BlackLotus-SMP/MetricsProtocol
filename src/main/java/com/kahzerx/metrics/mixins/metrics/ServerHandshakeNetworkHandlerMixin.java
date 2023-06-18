@@ -1,6 +1,7 @@
 package com.kahzerx.metrics.mixins.metrics;
 
 import com.kahzerx.metrics.helpers.IsStatPacketInterface;
+import com.kahzerx.metrics.helpers.SetServerInterface;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
@@ -25,8 +26,9 @@ public class ServerHandshakeNetworkHandlerMixin {
     private void onHandshake(HandshakeC2SPacket packet, CallbackInfo ci) {
         if (((IsStatPacketInterface) packet).isMetrics()) {
             this.connection.setState(NetworkState.STATUS);
-            ServerQueryNetworkHandler handler = new ServerQueryNetworkHandler(this.server, this.connection);
+            ServerQueryNetworkHandler handler = new ServerQueryNetworkHandler(this.server.getServerMetadata(), this.connection);
             ((IsStatPacketInterface) handler).setMetrics(((IsStatPacketInterface) packet).isMetrics());
+            ((SetServerInterface) handler).setServer(server);
             this.connection.setPacketListener(handler);
             ci.cancel();
         }
