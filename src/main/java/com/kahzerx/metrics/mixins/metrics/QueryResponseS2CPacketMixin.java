@@ -1,7 +1,5 @@
 package com.kahzerx.metrics.mixins.metrics;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.kahzerx.metrics.helpers.IsStatPacketInterface;
 import com.kahzerx.metrics.helpers.Metrics;
 import com.kahzerx.metrics.helpers.ServerCollectorInterface;
@@ -17,71 +15,83 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Mixin(QueryResponseS2CPacket.class)
 public class QueryResponseS2CPacketMixin implements IsStatPacketInterface, SetServerInterface {
-    private final Gson metricsParse = new GsonBuilder().
-            registerTypeAdapter(Metrics.class, new Metrics.Codec()).
-            registerTypeAdapter(Metrics.TPS.class, new Metrics.TPS.Codec()).
-            registerTypeAdapter(Metrics.Players.class, new Metrics.Players.Codec()).
-            registerTypeAdapter(Metrics.RAM.class, new Metrics.RAM.Codec()).
-            registerTypeAdapter(Metrics.Entities.class, new Metrics.Entities.Codec()).
-            registerTypeAdapter(Metrics.BlockEntities.class, new Metrics.BlockEntities.Codec()).
-            registerTypeAdapter(Metrics.Chunks.class, new Metrics.Chunks.Codec()).
-            registerTypeAdapter(Metrics.Dimensions.class, new Metrics.Dimensions.Codec()).
-            create();
     private boolean isMetrics = false;
     private MinecraftServer server;
 
-    @Redirect(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/PacketByteBuf;writeString(Ljava/lang/String;)Lnet/minecraft/network/PacketByteBuf;"))
-    private PacketByteBuf onWrite(PacketByteBuf instance, String string) {
+    @Inject(method = "write", at = @At(value = "HEAD"), cancellable = true)
+    private void onWrite(PacketByteBuf buf, CallbackInfo ci) {
         if (this.isMetrics()) {
             TPSProfiler tpsProf = ((ServerCollectorInterface) server).getTPSProfiler();
-            EntityProfiler entityProf = ((ServerCollectorInterface) server).getEntityProfiler();
-            BlockEntityProfiler blockEntityProf = ((ServerCollectorInterface) server).getBlockEntityProfiler();
-            ChunkProfiler chunkProf = ((ServerCollectorInterface) server).getChunkProfiler();
-
             Metrics.TPS tps = new Metrics.TPS(tpsProf.tps5Sec(), tpsProf.tps30Sec(), tpsProf.tps1Min());
-            Metrics.Entities entities = new Metrics.Entities(entityProf.getTickingEntities());
-            Metrics.BlockEntities blockEntities = new Metrics.BlockEntities(blockEntityProf.getTickingBlockEntities());
-            Metrics.Chunks chunks = new Metrics.Chunks(chunkProf.getLoadedChunks());
-            Metrics.MSPT mspt = new Metrics.MSPT(((ServerCollectorInterface) server).getMSPT());
-            List<ServerPlayerEntity> connectedPlayers = server.getPlayerManager().getPlayerList();
-            List<Metrics.Player> playerMetricList = new ArrayList<>();
-            for (ServerPlayerEntity p : connectedPlayers) {
-                playerMetricList.add(new Metrics.Player(
-                        p.getName().getString(),
-                        p.getUuidAsString(),
-                        p.getWorld().getRegistryKey().getValue().getPath(),
-                        p.getX(),
-                        p.getY(),
-                        p.getZ()
-                ));
+
+            List<Metrics.EntitiesPerDim> entities = new ArrayList<>();
+            EntityProfiler entityProf = ((ServerCollectorInterface) server).getEntityProfiler();
+            for (Map.Entry<String, Map<String, Integer>> entitiesPerDim : entityProf.getTickingEntities().entrySet()) {
+                List<Metrics.Count> counter = new ArrayList<>();
+                for (Map.Entry<String, Integer> countEntities : entitiesPerDim.getValue().entrySet()) {
+                    counter.add(new Metrics.Count(countEntities.getKey(), countEntities.getValue()));
+                }
+                entities.add(new Metrics.EntitiesPerDim(entitiesPerDim.getKey(), counter));
             }
-            Metrics.Players players = new Metrics.Players(playerMetricList);
+
+            List<Metrics.BlockEntitiesPerDim> blockEntities = new ArrayList<>();
+            BlockEntityProfiler blockEntityProf = ((ServerCollectorInterface) server).getBlockEntityProfiler();
+            for (Map.Entry<String, Map<String, Integer>> blockEntitiesPerDim : blockEntityProf.getTickingBlockEntities().entrySet()) {
+                List<Metrics.Count> counter = new ArrayList<>();
+                for (Map.Entry<String, Integer> countEntities : blockEntitiesPerDim.getValue().entrySet()) {
+                    counter.add(new Metrics.Count(countEntities.getKey(), countEntities.getValue()));
+                }
+                blockEntities.add(new Metrics.BlockEntitiesPerDim(blockEntitiesPerDim.getKey(), counter));
+            }
+
+            List<Metrics.ChunksPerDim> chunks = new ArrayList<>();
+            ChunkProfiler chunkProf = ((ServerCollectorInterface) server).getChunkProfiler();
+            for (Map.Entry<String, Integer> entry : chunkProf.getLoadedChunks().entrySet()) {
+                chunks.add(new Metrics.ChunksPerDim(entry.getKey(), entry.getValue()));
+            }
+
+            List<ServerPlayerEntity> connectedPlayers = server.getPlayerManager().getPlayerList();
+            List<Metrics.Player> players = new ArrayList<>();
+            for (ServerPlayerEntity p : connectedPlayers) {
+                players.add(new Metrics.Player(p.getName().getString(), p.getUuidAsString(), p.getWorld().getRegistryKey().getValue().getPath(), p.getX(), p.getY(), p.getZ()));
+            }
+
             ArrayList<String> allDims = new ArrayList<>();
             for (ServerWorld world : this.server.getWorlds()) {
                 allDims.add(world.getRegistryKey().getValue().getPath());
             }
-            Metrics.Uptime uptime = new Metrics.Uptime(((ServerCollectorInterface) server).getStartTime().toString());
-            Metrics.Day day = new Metrics.Day(server.getOverworld().getTimeOfDay() / 24000);
-            Metrics.Version version = new Metrics.Version(server.getVersion());
+
             MemoryMXBean mem = ManagementFactory.getMemoryMXBean();
             Metrics.RAM ram = new Metrics.RAM(
                     (double) mem.getHeapMemoryUsage().getUsed() / (1024 * 1024 * 1024),
                     (double) mem.getHeapMemoryUsage().getMax() / (1024 * 1024 * 1024)
             );
-            Metrics.Dimensions dimensions = new Metrics.Dimensions(allDims);
-            Metrics m = new Metrics(tps, mspt, players, version, ram, entities, blockEntities, chunks, dimensions, uptime, day);
-            return instance.writeString(metricsParse.toJson(m), Short.MAX_VALUE);  // TODO probably make this Integer
-        } else {
-            return instance.writeString(string);
+            Metrics m = new Metrics(
+                    ram,
+                    server.getVersion(),
+                    (server.getOverworld().getTimeOfDay() / 24000),
+                    ((ServerCollectorInterface) server).getMSPT(),
+                    ((ServerCollectorInterface) server).getStartTime().toString(),
+                    allDims,
+                    players,
+                    tps,
+                    chunks,
+                    entities,
+                    blockEntities
+            );
+            buf.encodeAsJson(Metrics.CODEC, m);
+            ci.cancel();
         }
     }
 

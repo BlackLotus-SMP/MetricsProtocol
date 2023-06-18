@@ -6,7 +6,6 @@ import com.kahzerx.metrics.profiler.ChunkProfiler;
 import com.kahzerx.metrics.profiler.EntityProfiler;
 import com.kahzerx.metrics.profiler.TPSProfiler;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -15,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin implements ServerCollectorInterface {
@@ -34,7 +34,7 @@ public class MinecraftServerMixin implements ServerCollectorInterface {
         this.entityProfiler.onTick();
         this.blockEntityProfiler.onTick();
         this.chunkProfiler.onTick();
-        mspt = MathHelper.average(lastTickLengths) * 1.06E-6D;
+        mspt = Arrays.stream(lastTickLengths).average().getAsDouble() * 1.0E-6D;
     }
 
     @Override
