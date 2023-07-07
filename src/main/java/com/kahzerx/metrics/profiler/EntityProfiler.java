@@ -14,7 +14,6 @@ public class EntityProfiler {
 
     public void onTick() {
         this.finalEntities = this.cachedEntities;
-        this.cachedEntities.clear();
         this.cachedEntities = new HashMap<>();
     }
 
