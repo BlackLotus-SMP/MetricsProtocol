@@ -13,6 +13,7 @@ public class ChunkProfiler {
 
     public void onTick() {
         this.finalChunks = this.cachedChunks;
+        this.cachedChunks.clear();
         this.cachedChunks = new HashMap<>();
     }
 

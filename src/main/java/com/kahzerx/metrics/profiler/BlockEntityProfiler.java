@@ -14,6 +14,7 @@ public class BlockEntityProfiler {
 
     public void onTick() {
         this.finalBlockEntities = this.cachedBlockEntities;
+        this.cachedBlockEntities.clear();
         this.cachedBlockEntities = new HashMap<>();
     }
 

@@ -16,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Iterator;
 import java.util.function.Consumer;
 
 @Mixin(World.class)
@@ -27,6 +26,8 @@ public abstract class WorldMixin {
 
     @Shadow @Nullable public abstract MinecraftServer getServer();
 
+    @Shadow public abstract boolean shouldTickBlockPos(BlockPos pos);
+
     @Inject(method = "tickEntity", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", shift = At.Shift.BEFORE))
     private <T extends Entity> void onTick(Consumer<T> tickConsumer, T entity, CallbackInfo ci) {
         MinecraftServer server = entity.getServer();
@@ -36,17 +37,13 @@ public abstract class WorldMixin {
         ((ServerCollectorInterface) server).getEntityProfiler().onEntityTick(entity.getName().getString(), entity.getWorld().getRegistryKey().getValue().getPath());
     }
 
-    @Redirect(method = "tickBlockEntities", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;next()Ljava/lang/Object;"))
-    private <E> E onTickBE(Iterator<BlockEntityTickInvoker> instance) {
-        E bi = (E) instance.next();
-        BlockEntityTickInvoker blockEntityTickInvoker = (BlockEntityTickInvoker) bi;
-        if (!blockEntityTickInvoker.isRemoved()) {
-            MinecraftServer server = getServer();
-            BlockPos biPos = blockEntityTickInvoker.getPos();
-            if (server != null && biPos != null) {
-                ((ServerCollectorInterface) server).getBlockEntityProfiler().onBlockEntityTick(getBlockState(blockEntityTickInvoker.getPos()).getBlock().getName().getString(), getWorldChunk(blockEntityTickInvoker.getPos()).getWorld().getRegistryKey().getValue().getPath());
-            }
+    @Redirect(method = "tickBlockEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/BlockEntityTickInvoker;getPos()Lnet/minecraft/util/math/BlockPos;"))
+    private BlockPos onTickBE(BlockEntityTickInvoker instance) {
+        BlockPos pos = instance.getPos();
+        MinecraftServer server = getServer();
+        if (server != null && shouldTickBlockPos(pos)) {
+            ((ServerCollectorInterface) server).getBlockEntityProfiler().onBlockEntityTick(getBlockState(pos).getBlock().getName().getString(), getWorldChunk(pos).getWorld().getRegistryKey().getValue().getPath());
         }
-        return bi;
+        return instance.getPos();
     }
 }
